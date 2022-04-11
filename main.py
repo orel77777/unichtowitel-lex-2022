@@ -9,10 +9,10 @@ import time
 def find_horizontal_consequent(matr, y1, x1):
     if(((y1-1)>=0) and ((x1-1)>=0)):
         if(matr[y1-1, x1-1] == matr[y1, x1]):
-            return [[y1-1, x1-1], [y1, x1]]
+            return [[y1-1, x1-1], [y1, x1-1]]
     if(((x1-1)>=0) and ((y1+1)<=7)):
         if(matr[y1+1, x1-1] == matr[y1, x1]):
-            return [[y1+1, x1-1], [y1, x1]]
+            return [[y1+1, x1-1], [y1, x1-1]]
     if(((x1+2)<=7) and ((y1+1)<=7)):
         if(matr[y1+1, x1+2] == matr[y1, x1]):
             return [[y1+1, x1+2], [y1, x1+2]]
@@ -97,14 +97,78 @@ def logic(matr, ice, chain):
                         return check         
     return 0
 
-template_names = ['blue', 'pink', 'green', 'yellow', 'violate', 'ice', 'chain']
-template_chars = np.chararray((8, 8))
-template_ice = np.chararray((8,8))
-template_chained = np.chararray((8,8))
+def make_coloured(picture, min_hsv, max_hsv):
+    picture_hsv = cv.cvtColor(picture, cv.COLOR_BGR2HSV)
+    picture_coloured = np.zeros_like(picture, np.uint8)    
+    picture_mask = cv.inRange(picture_hsv, min_hsv, max_hsv)
+    picture_imask = picture_mask>0
+    picture_coloured[picture_imask] = picture[picture_imask]    
+    picture_color = cv.cvtColor(picture_coloured, cv.COLOR_BGR2GRAY) 
+    return picture_color
 
-template_ice[:] = 'X'
-template_chars[:] = 'X'
-template_chained[:] = 'X'
+
+def templates_init(template_names, filt_dict):
+    templates_dict = {}
+    for template_name in template_names:
+        template = cv.imread('./templates/' + template_name + '.png')
+        templates_dict[template_name] = make_coloured(template, filt_dict[template_name][0], filt_dict[template_name][1])
+    return templates_dict
+
+def detect(im, template_names, colored_templates_dict, filt_dict):   
+    
+    for i, template_name in enumerate(template_names):
+        img_rgb = im.copy()
+        
+        template_color = colored_templates_dict[template_name]
+        img_coloured = make_coloured(img_rgb, filt_dict[template_name][0], filt_dict[template_name][1])     
+        
+        plt.imshow(template_color)
+        plt.show()
+        
+        plt.imshow(img_coloured)
+        plt.show()
+        
+        res = cv.matchTemplate(img_coloured, template_color, cv.TM_CCOEFF_NORMED)#cv.TM_CCORR_NORMED 
+        
+        plt.imshow(res, cmap = 'gray')
+        plt.colorbar();
+        plt.show()
+        
+        threshold = 0.55#np.mean(res)+3*np.std(res)
+        
+        loc = np.where(res >= threshold)
+        
+        if(template_name == 'ice'):
+            for pt in zip(*loc[::-1]):
+                index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
+                index_y = (pt[0]+(size_of_block//2)) // (size_of_block)
+                template_ice[index_x, index_y] = 'i'
+        elif(template_name == 'chain'):
+            for pt in zip(*loc[::-1]):
+                index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
+                index_y = (pt[0]+(size_of_block//2)) // (size_of_block)
+                template_chained[index_x, index_y] = 'c'
+        else:
+            for pt in zip(*loc[::-1]):
+                index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
+                index_y = (pt[0]+(size_of_block//2)) // (size_of_block)
+                template_chars[index_x, index_y] = template_names[i][0]
+    return template_chars, template_ice, template_chained
+
+def action(decision):
+    point1x = x1+((decision[0][1]*size_of_block)+(size_of_block//2))
+    point1y = y1+((decision[0][0]*size_of_block)+(size_of_block//2))
+    
+    point2x = x1+((decision[1][1]*size_of_block)+(size_of_block//2))
+    point2y = y1+((decision[1][0]*size_of_block)+(size_of_block//2))
+    
+    pyautogui.moveTo(point1x, point1y, duration=1, tween=pyautogui.easeInOutQuad)
+    pyautogui.click(button='left')
+    pyautogui.dragTo(point2x, point2y, 1, button='left')
+    pyautogui.click(button='left')        
+    time.sleep(3)
+
+template_names = ['blue', 'pink', 'green', 'yellow', 'violate', 'ice', 'chain']
 
 isFirst = False
 x1 = 0
@@ -113,107 +177,48 @@ y1 = 0
 x2 = 0
 y2 = 0
 
-im = cv.imread('./examples/example.png')
+#filters:
+filt_dict = {'green':[(33, 97, 32), (87, 255,255)],
+             'violate':[(125, 50, 141), (133, 180, 255)],
+             'yellow':[(0, 161, 0), (34, 255, 255)],
+             'pink':[(151,21,165), (179, 255, 255)],
+             'blue':[(92, 55, 104), (104, 255, 255)],
+             'ice':[(92, 55, 104), (104, 255, 255)],
+             'chain':[(0,0,0),(160, 76, 146)]}
+
+#templates_init
+colored_templates_dict = templates_init(template_names, filt_dict)
+
+#get_image
+im = cv.imread('./examples/example5.png')
 
 plt.imshow(im)
 plt.show()
 
-size_of_block = ((im.shape[0]+im.shape[1])//2) // 8 #70
+size_of_block = ((im.shape[0]+im.shape[1])//2) // 8
 print(size_of_block)
 
-for i, template_name in enumerate(template_names):
-    img_rgb = im.copy()
-    hsv = cv.cvtColor(img_rgb, cv.COLOR_BGR2HSV)
-    coloured = np.zeros_like(img_rgb, np.uint8)
+#detect
 
-    if(template_name == 'green'):
-        image_mask_green = cv.inRange(hsv, (33, 97, 32), (87, 255,255))
-        image_imask = image_mask_green>0
-    elif(template_name == 'violate'):
-        image_mask_violate = cv.inRange(hsv, (125, 50, 141), (133, 180, 255))
-        image_imask = image_mask_violate>0
-    elif(template_name == 'yellow'):
-        image_mask_yellow = cv.inRange(hsv, (0, 161, 0), (34, 255, 255))
-        image_imask = image_mask_yellow>0
-    elif(template_name == 'pink'):
-        image_mask_pink = cv.inRange(hsv, (142,80,203), (179, 255, 255))
-        image_imask = image_mask_pink>0
-    elif((template_name == 'blue') or (template_name == 'ice')):
-        image_mask_blue = cv.inRange(hsv, (92, 55, 104), (104, 255, 255))
-        image_imask = image_mask_blue>0
-    elif((template_name == 'chain')):
-        image_mask_chain = cv.inRange(hsv, (0,0,0), (160, 76, 146))
-        image_imask = image_mask_chain>0
-    
-    coloured[image_imask] = img_rgb[image_imask]
-    img_coloured = cv.cvtColor(coloured, cv.COLOR_BGR2GRAY)
+template_chars = np.chararray((8, 8))
+template_ice = np.chararray((8,8))
+template_chained = np.chararray((8,8))
 
-    plt.imshow(img_coloured)
-    plt.show()
-        
-    template = cv.imread('./templates/' + template_name + '.png')
-    template_hsv = cv.cvtColor(template, cv.COLOR_BGR2HSV)
-    template_coloured = np.zeros_like(template, np.uint8)
-        
-    if(template_name == 'green'):
-        template_mask_green = cv.inRange(template_hsv, (33, 97, 32), (87, 255,255))
-        template_imask = template_mask_green>0
-    elif(template_name == 'violate'):
-        template_mask_violate = cv.inRange(template_hsv, (125, 50, 141), (133, 180, 255))
-        template_imask = template_mask_violate>0
-    elif(template_name == 'yellow'):
-        template_mask_yellow = cv.inRange(template_hsv, (0, 161, 0), (34, 255, 255))
-        template_imask = template_mask_yellow>0
-    elif(template_name == 'pink'):
-        template_mask_pink = cv.inRange(template_hsv, (142,80,203), (179, 255, 255))
-        template_imask = template_mask_pink>0
-    elif((template_name == 'blue') or (template_name == 'ice')):
-        template_mask_blue = cv.inRange(template_hsv, (92, 55, 104), (104, 255, 255))
-        template_imask = template_mask_blue>0
-    elif((template_name == 'chain')):
-        template_mask_chain = cv.inRange(template_hsv, (0,0,0), (160, 76, 146))
-        template_imask = template_mask_chain>0
-            
-    template_coloured[template_imask] = template[template_imask]
-    template_color = cv.cvtColor(template_coloured, cv.COLOR_BGR2GRAY)
-        
-    plt.imshow(template_color)
-    plt.show()
-        
-    res = cv.matchTemplate(img_coloured, template_color, cv.TM_CCOEFF_NORMED)#cv.TM_CCORR_NORMED 
+template_ice[:] = 'X'
+template_chars[:] = 'X'
+template_chained[:] = 'X'
 
-    plt.imshow(res, cmap = 'gray')
-    plt.colorbar();
-    plt.show()
-        
-    threshold = 0.55#np.mean(res)+3*np.std(res)
-        
-    loc = np.where(res >= threshold)
-        
-    if(template_name == 'ice'):
-        for pt in zip(*loc[::-1]):
-            index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
-            index_y = (pt[0]+(size_of_block//2)) // (size_of_block)
-            template_ice[index_x, index_y] = 'i'
-    elif(template_name == 'chain'):
-        for pt in zip(*loc[::-1]):
-            index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
-            index_y = (pt[0]+(size_of_block//2)) // (size_of_block)
-            template_chained[index_x, index_y] = 'c'
-    else:
-        for pt in zip(*loc[::-1]):
-            index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
-            index_y = (pt[0]+(size_of_block//2)) // (size_of_block)
-            template_chars[index_x, index_y] = template_names[i][0]
+chars, ice, chain = detect(im, template_names, colored_templates_dict, filt_dict)
+
+#make decision
+decision = logic(chars, ice, chain)
+print(decision)
+
+#make action
+#action(decision)
+
+
             
 #make decision
 decision = logic(template_chars, template_ice, template_chained)
 #action
-point1x = x1+((decision[0][1]*size_of_block)+(size_of_block//2))
-point1y = y1+((decision[0][0]*size_of_block)+(size_of_block//2))
-pyautogui.moveTo(point1x, point1y, duration=2, tween=pyautogui.easeInOutQuad)
-point2x = x1+((decision[1][1]*size_of_block)+(size_of_block//2))
-point2y = y1+((decision[1][0]*size_of_block)+(size_of_block//2))
-pyautogui.moveTo(point2x, point2y, duration=2, tween=pyautogui.easeInOutQuad)
-
-time.sleep(10)
