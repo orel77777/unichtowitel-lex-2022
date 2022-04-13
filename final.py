@@ -122,18 +122,8 @@ def detect(im, template_names, colored_templates_dict, filt_dict, res_maps):
         template_color = colored_templates_dict[template_name]
         img_coloured = make_coloured(img_rgb, filt_dict[template_name][0], filt_dict[template_name][1])     
         
-        plt.imshow(template_color)
-        plt.show()
-        
-        plt.imshow(img_coloured)
-        plt.show()
-        
         res = cv.matchTemplate(img_coloured, template_color, cv.TM_CCOEFF_NORMED)#cv.TM_CCORR_NORMED 
         res_maps[template_name] = res
-        
-        plt.imshow(res, cmap = 'gray')
-        plt.colorbar();
-        plt.show()
         
         if((template_name == 'chain') or (template_name == 'ice')):
             threshold = 0.4
