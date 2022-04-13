@@ -58,43 +58,44 @@ def logic(matr, ice, chain):
     for y in [0,1,2,3,4,5,6,7]:
         for x in [0,1,2,3,4,5,6,7]:
             #check horizontal
-            if(x!=7):     
-                if(matr[y, x+1] == matr[y,x]):
-                    check = find_horizontal_consequent(matr, y, x)
-                    if((check != [-1,-1])
-                       and (ice[check[0][0], check[0][1]] != 'i')
-                       and (ice[check[1][0], check[1][1]] != 'i')
-                       and (chain[check[0][0], check[0][1]] != 'c')
-                       and (chain[check[1][0], check[1][1]] != 'c')):
-                        return check
-            if((x!=6) and (x!=7)):
-                if(matr[y, x+2] == matr[y,x]):
-                    check = find_horizontal_non_conseq(matr, y, x)
-                    if((check != [-1,-1])
-                       and (ice[check[0][0], check[0][1]] != 'i')
-                       and (ice[check[1][0], check[1][1]] != 'i')
-                       and (chain[check[0][0], check[0][1]] != 'c')
-                       and (chain[check[1][0], check[1][1]] != 'c')):
-                        return check
-            #check vertical
-            if(y!=7):
-                if(matr[y+1, x] == matr[y,x]):
-                    check = find_vertical_consequent(matr, y, x)
-                    if((check != [-1,-1])
-                       and (ice[check[0][0], check[0][1]] != 'i')
-                       and (ice[check[1][0], check[1][1]] != 'i')
-                       and (chain[check[0][0], check[0][1]] != 'c')
-                       and (chain[check[1][0], check[1][1]] != 'c')):
-                        return check
-            if((y!=6) and (y!=7)):
-                if(matr[y+2, x] == matr[y,x]):
-                    check = find_vertical_non_conseq(matr, y, x)
-                    if((check != [-1,-1])
-                       and (ice[check[0][0], check[0][1]] != 'i')
-                       and (ice[check[1][0], check[1][1]] != 'i')
-                       and (chain[check[0][0], check[0][1]] != 'c')
-                       and (chain[check[1][0], check[1][1]] != 'c')):
-                        return check         
+            if((chain[y, x] != b'c') and (matr[y, x] != b'X')):
+                if(x!=7):     
+                    if((matr[y, x+1] == matr[y, x]) and (chain[y, x+1] != b'c')):
+                        check = find_horizontal_consequent(matr, y, x)
+                        if((check != [-1,-1])
+                           and (ice[check[0][0], check[0][1]] != b'i')
+                           and (ice[check[1][0], check[1][1]] != b'i')
+                           and (chain[check[0][0], check[0][1]] != b'c')
+                           and (chain[check[1][0], check[1][1]] != b'c')):
+                            return check
+                if((x!=6) and (x!=7)):
+                     if((matr[y, x+2] == matr[y, x]) and (chain[y, x+2] != b'c')):
+                        check = find_horizontal_non_conseq(matr, y, x)
+                        if((check != [-1,-1])
+                           and (ice[check[0][0], check[0][1]] != b'i')
+                           and (ice[check[1][0], check[1][1]] != b'i')
+                           and (chain[check[0][0], check[0][1]] != b'c')
+                           and (chain[check[1][0], check[1][1]] != b'c')):
+                            return check
+                #check vertical
+                if(y!=7):
+                    if((matr[y+1, x] == matr[y, x]) and (chain[y+1, x] != b'c')):
+                        check = find_vertical_consequent(matr, y, x)
+                        if((check != [-1,-1])
+                           and (ice[check[0][0], check[0][1]] != b'i')
+                           and (ice[check[1][0], check[1][1]] != b'i')
+                           and (chain[check[0][0], check[0][1]] != b'c')
+                           and (chain[check[1][0], check[1][1]] != b'c')):
+                            return check
+                if((y!=6) and (y!=7)):
+                    if((matr[y+2, x] == matr[y, x]) and (chain[y+2, x] != b'c')):
+                        check = find_vertical_non_conseq(matr, y, x)
+                        if((check != [-1,-1])
+                           and (ice[check[0][0], check[0][1]] != b'i')
+                           and (ice[check[1][0], check[1][1]] != b'i')
+                           and (chain[check[0][0], check[0][1]] != b'c')
+                           and (chain[check[1][0], check[1][1]] != b'c')):
+                            return check         
     return 0
 
 def make_coloured(picture, min_hsv, max_hsv):
@@ -114,8 +115,7 @@ def templates_init(template_names, filt_dict):
         templates_dict[template_name] = make_coloured(template, filt_dict[template_name][0], filt_dict[template_name][1])
     return templates_dict
 
-def detect(im, template_names, colored_templates_dict, filt_dict):   
-    
+def detect(im, template_names, colored_templates_dict, filt_dict, res_maps):   
     for i, template_name in enumerate(template_names):
         img_rgb = im.copy()
         
@@ -129,12 +129,18 @@ def detect(im, template_names, colored_templates_dict, filt_dict):
         plt.show()
         
         res = cv.matchTemplate(img_coloured, template_color, cv.TM_CCOEFF_NORMED)#cv.TM_CCORR_NORMED 
+        res_maps[template_name] = res
         
         plt.imshow(res, cmap = 'gray')
         plt.colorbar();
         plt.show()
         
-        threshold = 0.55#np.mean(res)+3*np.std(res)
+        if((template_name == 'chain') or (template_name == 'ice')):
+            threshold = 0.4
+        elif(template_name == 'blue'):
+            threshold = 0.6
+        else:
+            threshold = 0.55
         
         loc = np.where(res >= threshold)
         
@@ -148,6 +154,12 @@ def detect(im, template_names, colored_templates_dict, filt_dict):
                 index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
                 index_y = (pt[0]+(size_of_block//2)) // (size_of_block)
                 template_chained[index_x, index_y] = 'c'
+        elif(template_name == 'blue_ice'):
+            for pt in zip(*loc[::-1]):
+                index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
+                index_y = (pt[0]+(size_of_block//2)) // (size_of_block)
+                template_chars[index_x, index_y] = 'b'
+                template_ice[index_x, index_y] = 'i'
         else:
             for pt in zip(*loc[::-1]):
                 index_x = (pt[1]+(size_of_block//2)) // (size_of_block)
@@ -155,20 +167,32 @@ def detect(im, template_names, colored_templates_dict, filt_dict):
                 template_chars[index_x, index_y] = template_names[i][0]
     return template_chars, template_ice, template_chained
 
-def action(decision):
+def action(decision, x1, y1):
     point1x = x1+((decision[0][1]*size_of_block)+(size_of_block//2))
     point1y = y1+((decision[0][0]*size_of_block)+(size_of_block//2))
     
     point2x = x1+((decision[1][1]*size_of_block)+(size_of_block//2))
     point2y = y1+((decision[1][0]*size_of_block)+(size_of_block//2))
     
-    pyautogui.moveTo(point1x, point1y, duration=1, tween=pyautogui.easeInOutQuad)
+    pyautogui.moveTo(point1x, point1y)
     pyautogui.click(button='left')
-    pyautogui.dragTo(point2x, point2y, 1, button='left')
+    pyautogui.dragTo(point2x, point2y, button='left')
     pyautogui.click(button='left')        
     time.sleep(3)
 
-template_names = ['blue', 'pink', 'green', 'yellow', 'violate', 'ice', 'chain']
+def repair(chars, res_maps):
+    template_names = ['green', 'violet', 'yellow', 'pink', 'blue']
+    maxes = np.zeros(len(template_names))
+    for point in np.argwhere(chars == b'X'):
+        y_i = point[0]*size_of_block
+        x_i = point[1]*size_of_block
+        y_e = y_i + (size_of_block // 10)
+        x_e = x_i + (size_of_block // 10)
+        for i, template_name in enumerate(template_names):
+            maxes[i] = np.max(res_maps[template_name][y_i:y_e, x_i:x_e])
+        if(np.max(maxes)>0):
+            chars[point[0], point[1]] = template_names[np.argmax(maxes)][0]
+    return 0
 
 isFirst = False
 x1 = 0
@@ -179,18 +203,25 @@ y2 = 0
 
 #filters:
 filt_dict = {'green':[(33, 97, 32), (87, 255,255)],
-             'violate':[(125, 50, 141), (133, 180, 255)],
+             'violet':[(125, 50, 141), (133, 180, 255)],
              'yellow':[(0, 161, 0), (34, 255, 255)],
-             'pink':[(151,21,165), (179, 255, 255)],
+             'pink':[(151, 21, 165), (179, 255, 255)],
              'blue':[(92, 55, 104), (104, 255, 255)],
+             'yellow_ice':[(15, 109, 170), (31, 133, 198)],
+             'green_ice':[(33, 97, 32), (87, 255,255)],
+             'pink_ice':[(151,21,165), (179, 255, 255)],
+             'blue_ice':[(92, 55, 104), (104, 255, 255)],
+             'violet_ice':[(106, 41, 108), (134, 172, 255)],
              'ice':[(92, 55, 104), (104, 255, 255)],
-             'chain':[(0,0,0),(160, 76, 146)]}
+             'chain':[(0, 0, 0),(132, 57, 107)]}
+
+template_names = list(filt_dict.keys())
 
 #templates_init
 colored_templates_dict = templates_init(template_names, filt_dict)
 
 #get_image
-im = cv.imread('./examples/example5.png')
+im = cv.imread('./examples/example9.png')
 
 plt.imshow(im)
 plt.show()
@@ -198,8 +229,11 @@ plt.show()
 size_of_block = ((im.shape[0]+im.shape[1])//2) // 8
 print(size_of_block)
 
-#detect
+if((size_of_block)<70 or (size_of_block>80)):
+    print('Too big image. Inconsistent of template size and image')
+    exit(0)
 
+#detect
 template_chars = np.chararray((8, 8))
 template_ice = np.chararray((8,8))
 template_chained = np.chararray((8,8))
@@ -208,17 +242,14 @@ template_ice[:] = 'X'
 template_chars[:] = 'X'
 template_chained[:] = 'X'
 
-chars, ice, chain = detect(im, template_names, colored_templates_dict, filt_dict)
-
+res_maps = {}
+chars, ice, chain = detect(im, template_names, colored_templates_dict, filt_dict, res_maps)
+#repair
+if(np.isin('X', chars)):
+    repair(chars, res_maps)
 #make decision
 decision = logic(chars, ice, chain)
 print(decision)
 
 #make action
-#action(decision)
-
-
-            
-#make decision
-decision = logic(template_chars, template_ice, template_chained)
-#action
+#action(decision, x1, y1)
