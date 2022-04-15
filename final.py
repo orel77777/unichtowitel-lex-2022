@@ -59,23 +59,23 @@ def logic(matr, ice_chain, not_movable_chars, fixed_chars, unrec_char):
         for x in np.arange(matr.shape[1]):
             if((not (ice_chain[y, x] in fixed_chars)) and (matr[y, x] != unrec_char)):
                 #check horizontal
-                if(x != matr.shape[1] - 1):
+                if(x != matr.shape[1]-1):
                     if((matr[y, x+1] == matr[y, x]) and (not (ice_chain[y, x+1] in fixed_chars))):
                         check = find_horizontal_consequent(matr, y, x)
                         if((check != [-1,-1]) and (not (ice_chain[check[0][0], check[0][1]] in not_movable_chars)) and (not (ice_chain[check[1][0], check[1][1]] in not_movable_chars))):
                             return check
-                if((x != matr.shape[1] - 2) and (x != matr.shape[1] - 1)):
+                if((x != matr.shape[1]-2) and (x != matr.shape[1]-1)):
                      if((matr[y, x+2] == matr[y, x]) and (not (ice_chain[y, x+2] in fixed_chars))):
                         check = find_horizontal_non_conseq(matr, y, x)
                         if((check != [-1,-1]) and (not (ice_chain[check[0][0], check[0][1]] in not_movable_chars)) and (not (ice_chain[check[1][0], check[1][1]] in not_movable_chars))):
                             return check
                 #check vertical
-                if(y != matr.shape[1] - 1):
+                if(y != matr.shape[1]-1):
                     if((matr[y+1, x] == matr[y, x]) and (not (ice_chain[y+1, x] in fixed_chars))):
                         check = find_vertical_consequent(matr, y, x)
                         if((check != [-1,-1]) and (not (ice_chain[check[0][0], check[0][1]] in not_movable_chars)) and (not (ice_chain[check[1][0], check[1][1]] in not_movable_chars))):
                             return check
-                if((y != matr.shape[1] - 2) and (y != matr.shape[1] - 1)):
+                if((y != matr.shape[1]-2) and (y != matr.shape[1]-1)):
                     if((matr[y+2, x] == matr[y, x]) and (not (ice_chain[y+2, x] in fixed_chars))):
                         check = find_vertical_non_conseq(matr, y, x)
                         if((check != [-1,-1]) and (not (ice_chain[check[0][0], check[0][1]] in not_movable_chars)) and (not (ice_chain[check[1][0], check[1][1]] in not_movable_chars))):
@@ -116,7 +116,7 @@ def detect(im, size_of_block,
         if(template_name in specific_template_names):
             threshold = specific_types_threshold
         elif(template_name == 'blue'):
-            threshold = main_threshold + 0.05
+            threshold = main_threshold+0.05
         else:
             threshold = main_threshold
         
@@ -150,7 +150,8 @@ def action(decision, x1, y1, size_of_block):
     pyautogui.moveTo(point1x, point1y)
     pyautogui.click(button='left')
     pyautogui.dragTo(point2x, point2y, button='left')
-    pyautogui.click(button='left')        
+    pyautogui.moveTo(point2x, point2y)
+    pyautogui.click(button='left')      
     time.sleep(4)
 
 def repair(size_of_block, main_template_names, chars, unrec_chars,
@@ -188,7 +189,7 @@ filt_dict = {'green':[(33, 97, 32), (87, 255,255)],
              'yellow':[(0, 161, 0), (34, 255, 255)],
              'pink':[(151, 21, 165), (179, 255, 255)],
              'blue':[(92, 55, 104), (104, 255, 255)],
-             'yellow_ice':[(15, 109, 170), (31, 133, 198)],
+             'yellow_ice':[(8, 52, 154), (34, 133, 203)],
              'green_ice':[(33, 97, 32), (87, 255,255)],
              'pink_ice':[(151,21,165), (179, 255, 255)],
              'blue_ice':[(92, 55, 104), (104, 255, 255)],

@@ -113,6 +113,14 @@ def detect(im, size_of_block,
         res = cv.matchTemplate(img_coloured, template_color, cv.TM_CCOEFF_NORMED)
         res_maps[template_name] = res
         
+        plt.imshow(template_color)
+        plt.show()
+        plt.imshow(img_coloured)
+        plt.show()
+        plt.imshow(res)
+        plt.colorbar()
+        plt.show()
+        
         if(template_name in specific_template_names):
             threshold = specific_types_threshold
         elif(template_name == 'blue'):
@@ -150,7 +158,8 @@ def action(decision, x1, y1, size_of_block):
     pyautogui.moveTo(point1x, point1y)
     pyautogui.click(button='left')
     pyautogui.dragTo(point2x, point2y, button='left')
-    pyautogui.click(button='left')        
+    pyautogui.moveTo(point2x, point2y)
+    pyautogui.click(button='left')      
     time.sleep(4)
 
 def repair(size_of_block, main_template_names, chars, unrec_chars,
@@ -188,7 +197,7 @@ filt_dict = {'green':[(33, 97, 32), (87, 255,255)],
              'yellow':[(0, 161, 0), (34, 255, 255)],
              'pink':[(151, 21, 165), (179, 255, 255)],
              'blue':[(92, 55, 104), (104, 255, 255)],
-             'yellow_ice':[(15, 109, 170), (31, 133, 198)],
+             'yellow_ice':[(8, 52, 154), (34, 133, 203)],
              'green_ice':[(33, 97, 32), (87, 255,255)],
              'pink_ice':[(151,21,165), (179, 255, 255)],
              'blue_ice':[(92, 55, 104), (104, 255, 255)],
@@ -212,7 +221,7 @@ main_threshold = 0.55
 colored_templates_dict = templates_init(template_names, filt_dict)
 
 #get_image
-im = cv.imread('./examples/example9.png')
+im = cv.imread('./examples/example15.png')
 
 plt.imshow(im)
 plt.show()
