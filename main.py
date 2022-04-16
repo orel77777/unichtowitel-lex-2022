@@ -6,26 +6,32 @@ import pyautogui
 from matplotlib import pyplot as plt
 import time
 
-def find_horizontal_consequent(matr, y1, x1):
+def find_horizontal_consequent(matr, y1, x1):    
     if(((y1-1)>=0) and ((x1-1)>=0)):
         if(matr[y1-1, x1-1] == matr[y1, x1]):
             return [[y1-1, x1-1], [y1, x1-1]]
-    if(((x1-1)>=0) and ((y1+1)<=7)):
+    if(((x1-1)>=0) and ((y1+1)<=(matr.shape[0]-1))):
         if(matr[y1+1, x1-1] == matr[y1, x1]):
             return [[y1+1, x1-1], [y1, x1-1]]
-    if(((x1+2)<=7) and ((y1+1)<=7)):
+    if(((x1+2)<=(matr.shape[1]-1)) and ((y1+1)<=(matr.shape[0]-1))):
         if(matr[y1+1, x1+2] == matr[y1, x1]):
             return [[y1+1, x1+2], [y1, x1+2]]
-    if(((x1+2)<=7) and ((y1-1)>=0)):
+    if(((x1+2)<=(matr.shape[1]-1)) and ((y1-1)>=0)):
         if(matr[y1-1, x1+2] == matr[y1, x1]):
             return [[y1-1, x1+2], [y1, x1+2]]
+    if((x1-2)>=0):    
+        if(matr[y1, x1-2] == matr[y1, x1]):
+            return [[y1, x1-2], [y1, x1-1]]
+    if((x1+3)<=(matr.shape[1]-1)):    
+        if(matr[y1, x1+3] == matr[y1, x1]):
+            return [[y1, x1+3], [y1, x1+2]]
     return [-1,-1]
 
 def find_horizontal_non_conseq(matr, y1, x1):
-    if(((y1+1)<=7) and ((x1+1)<=7)):    
+    if(((y1+1)<=(matr.shape[0]-1)) and ((x1+1)<=(matr.shape[1]-1))):    
         if(matr[y1+1, x1+1] == matr[y1, x1]):
             return [[y1+1, x1+1], [y1, x1+1]]
-    if(((y1-1)>=0) and ((x1+1)<=7)):
+    if(((y1-1)>=0) and ((x1+1)<=(matr.shape[1]-1))):
         if(matr[y1-1, x1+1] == matr[y1, x1]):
             return [[y1-1, x1+1], [y1, x1+1]]
     return [-1, -1]
@@ -34,15 +40,21 @@ def find_vertical_consequent(matr, y1, x1):
     if(((y1-1)>=0) and ((x1-1)>=0)):
         if(matr[y1-1, x1-1] == matr[y1, x1]):
             return [[y1-1, x1-1], [y1-1, x1]]
-    if(((x1+1)<=0) and ((y1+2)<=7)):
+    if(((x1+1)<=(matr.shape[1]-1)) and ((y1+2)<=(matr.shape[0]-1))):
         if(matr[y1+2, x1+1] == matr[y1, x1]):
             return [[y1+2, x1+1], [y1+2, x1]]
-    if(((x1-1)>=0) and ((y1+2)<=7)):
+    if(((x1-1)>=0) and ((y1+2)<=(matr.shape[0]-1))):
         if(matr[y1+2, x1-1] == matr[y1, x1]):
             return [[y1+2, x1-1], [y1+2, x1]]
-    if(((x1+1)<=7) and ((y1-1)>=0)):
+    if(((x1+1)<=(matr.shape[1]-1)) and ((y1-1)>=0)):
         if(matr[y1-1, x1+1] == matr[y1, x1]):
             return [[y1-1, x1+1], [y1-1, x1]]
+    if((y1-2)>=0):    
+        if(matr[y1-2, x1] == matr[y1, x1]):
+            return [[y1-2, x1], [y1-1, x1]]
+    if((y1+3)<=(matr.shape[0]-1)):    
+        if(matr[y1+3, x1] == matr[y1, x1]):
+            return [[y1+3, x1], [y1+2, x1]]
     return [-1,-1]
 
 def find_vertical_non_conseq(matr, y1, x1):
@@ -59,27 +71,27 @@ def logic(matr, ice_chain, not_movable_chars, fixed_chars, unrec_char):
         for x in np.arange(matr.shape[1]):
             if((not (ice_chain[y, x] in fixed_chars)) and (matr[y, x] != unrec_char)):
                 #check horizontal
-                if(x != matr.shape[1]-1):
+                if(x != matr.shape[1] - 1):
                     if((matr[y, x+1] == matr[y, x]) and (not (ice_chain[y, x+1] in fixed_chars))):
                         check = find_horizontal_consequent(matr, y, x)
                         if((check != [-1,-1]) and (not (ice_chain[check[0][0], check[0][1]] in not_movable_chars)) and (not (ice_chain[check[1][0], check[1][1]] in not_movable_chars))):
                             return check
-                if((x != matr.shape[1]-2) and (x != matr.shape[1]-1)):
+                if((x != matr.shape[1] - 2) and (x != matr.shape[1] - 1)):
                      if((matr[y, x+2] == matr[y, x]) and (not (ice_chain[y, x+2] in fixed_chars))):
                         check = find_horizontal_non_conseq(matr, y, x)
                         if((check != [-1,-1]) and (not (ice_chain[check[0][0], check[0][1]] in not_movable_chars)) and (not (ice_chain[check[1][0], check[1][1]] in not_movable_chars))):
                             return check
                 #check vertical
-                if(y != matr.shape[1]-1):
+                if(y != matr.shape[0] - 1):
                     if((matr[y+1, x] == matr[y, x]) and (not (ice_chain[y+1, x] in fixed_chars))):
                         check = find_vertical_consequent(matr, y, x)
                         if((check != [-1,-1]) and (not (ice_chain[check[0][0], check[0][1]] in not_movable_chars)) and (not (ice_chain[check[1][0], check[1][1]] in not_movable_chars))):
                             return check
-                if((y != matr.shape[1]-2) and (y != matr.shape[1]-1)):
+                if((y != matr.shape[0] - 2) and (y != matr.shape[0] - 1)):
                     if((matr[y+2, x] == matr[y, x]) and (not (ice_chain[y+2, x] in fixed_chars))):
                         check = find_vertical_non_conseq(matr, y, x)
                         if((check != [-1,-1]) and (not (ice_chain[check[0][0], check[0][1]] in not_movable_chars)) and (not (ice_chain[check[1][0], check[1][1]] in not_movable_chars))):
-                            return check         
+                            return check
     return 0
 
 def make_coloured(picture, min_hsv, max_hsv):
@@ -149,17 +161,18 @@ def detect(im, size_of_block,
     return template_chars, template_specific_blocks
 
 def action(decision, x1, y1, size_of_block):
-    point1x = x1+((decision[0][1]*size_of_block)+(size_of_block//2))
-    point1y = y1+((decision[0][0]*size_of_block)+(size_of_block//2))
-    
-    point2x = x1+((decision[1][1]*size_of_block)+(size_of_block//2))
-    point2y = y1+((decision[1][0]*size_of_block)+(size_of_block//2))
-    
-    pyautogui.moveTo(point1x, point1y)
-    pyautogui.click(button='left')
-    pyautogui.dragTo(point2x, point2y, button='left')
-    pyautogui.moveTo(point2x, point2y)
-    pyautogui.click(button='left')      
+    if(decision != 0):    
+        point1x = x1+((decision[0][1]*size_of_block)+(size_of_block//2))
+        point1y = y1+((decision[0][0]*size_of_block)+(size_of_block//2))
+        
+        point2x = x1+((decision[1][1]*size_of_block)+(size_of_block//2))
+        point2y = y1+((decision[1][0]*size_of_block)+(size_of_block//2))
+        
+        pyautogui.moveTo(point1x, point1y)
+        pyautogui.click(button='left')
+        pyautogui.dragTo(point2x, point2y, button='left')
+        pyautogui.click(button='left')
+        pyautogui.click(button='left')
     time.sleep(4)
 
 def repair(size_of_block, main_template_names, chars, unrec_chars,
@@ -221,7 +234,7 @@ main_threshold = 0.55
 colored_templates_dict = templates_init(template_names, filt_dict)
 
 #get_image
-im = cv.imread('./examples/example15.png')
+im = cv.imread('./examples/example16.png')
 
 plt.imshow(im)
 plt.show()
