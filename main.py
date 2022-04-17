@@ -170,8 +170,8 @@ def action(decision, x1, y1, size_of_block):
         
         pyautogui.moveTo(point1x, point1y)
         pyautogui.click(button='left')
-        pyautogui.dragTo(point2x, point2y, button='left')
-        pyautogui.click(button='left')
+        pyautogui.mouseDown(button='left')  # press the left button down
+        pyautogui.mouseUp(button='left', x=point2x, y=point2y)  # move the mouse to point2, then release the left button up.
         pyautogui.click(button='left')
     time.sleep(4)
 
