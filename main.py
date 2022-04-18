@@ -173,6 +173,8 @@ def action(decision, x1, y1, size_of_block):
         pyautogui.mouseDown(button='left')  # press the left button down
         pyautogui.mouseUp(button='left', x=point2x, y=point2y)  # move the mouse to point2, then release the left button up.
         pyautogui.click(button='left')
+        pyautogui.moveTo(point1x, point1y)
+        pyautogui.click(button='left')
     time.sleep(4)
 
 def repair(size_of_block, main_template_names, chars, unrec_chars,
